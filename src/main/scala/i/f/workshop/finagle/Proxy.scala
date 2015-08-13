@@ -5,5 +5,6 @@ import com.twitter.finagle.{Httpx, Service}
 import com.twitter.util.Await
 
 object Proxy extends App {
-
+  val proxy: Service[Request, Response] = Httpx.client.newService("giphy.com:80")
+  Await.ready(Httpx.serve(":8081", proxy))
 }

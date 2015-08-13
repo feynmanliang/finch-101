@@ -7,4 +7,14 @@ import com.twitter.util.{Await, Future}
 
 object HelloWorld extends App {
 
+  val s: Service[Request, Response] = new Service[Request, Response] {
+    def apply(req: Request): Future[Response] = {
+      val rep: Response = Response()
+      rep.content = Buf.Utf8("Hello World!")
+
+      Future.value(rep)
+    }
+  }
+  val server: ListeningServer = Httpx.server.serve(":8081", s)
+  Await.ready(server)
 }
