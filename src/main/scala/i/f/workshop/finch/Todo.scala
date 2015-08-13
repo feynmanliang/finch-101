@@ -31,4 +31,25 @@ object Todo extends App {
     def delete(id: String): Unit = synchronized { db -= id }
   }
 
+  val todo: RequestReader[Todo] = body.as[String => Todo]
+  .map(_(UUID.randomUUID().toString))
+
+  val postTodo: Router[Todo] = post("todos" ? todo) { t: Todo =>
+    Todo.save(t)
+
+    t
+  }
+
+  val getTodos: Router[List[Todo]] = get("todos") { Todo.list() }
+  val patchedTodo: RequestReader[Todo => Todo] = body.as[Todo => Todo]
+  val patchTodo: Router[Todo] =
+    patch("todos" / string ? patchedTodo) { (id: String, pt: Todo => Todo) =>
+      val currentTodo = Todo.get(id).get
+      val newTodo = pt(currentTodo)
+      Todo.save(newTodo)
+
+      newTodo
+    }
+
+  Await.ready(Httpx.server.serve(":8081", (getTodos :+: postTodo :+: patchTodo).toService))
 }
